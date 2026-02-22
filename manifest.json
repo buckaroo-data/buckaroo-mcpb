@@ -1,0 +1,62 @@
+{
+  "manifest_version": "0.4",
+  "name": "buckaroo-table",
+  "display_name": "Buckaroo Table Viewer",
+  "version": "0.12.8",
+  "description": "Interactive table viewer for CSV, TSV, Parquet, and JSON files",
+  "long_description": "Buckaroo lets you view and explore tabular data files interactively. When you mention a data file, Claude opens it in a rich table UI in your browser with sorting, filtering, summary statistics, and data transformations.",
+  "author": {
+    "name": "Paddy Mullen",
+    "url": "https://github.com/paddymul/buckaroo"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/paddymul/buckaroo-mcpb"
+  },
+  "homepage": "https://github.com/paddymul/buckaroo",
+  "support": "https://github.com/paddymul/buckaroo/issues",
+  "icon": "icon.png",
+  "server": {
+    "type": "uv",
+    "entry_point": "src/buckaroo_mcp_tool.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "${__dirname}/src/buckaroo_mcp_tool.py"],
+      "env": {
+        "BUCKAROO_PORT": "${user_config.port}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "view_data",
+      "description": "Load a tabular data file (CSV, TSV, Parquet, JSON) in Buckaroo for interactive viewing"
+    },
+    {
+      "name": "buckaroo_table",
+      "description": "Load a tabular data file in Buckaroo (alias for view_data)"
+    },
+    {
+      "name": "buckaroo_diagnostics",
+      "description": "Run diagnostics on the Buckaroo data server"
+    }
+  ],
+  "user_config": {
+    "port": {
+      "type": "number",
+      "title": "Server Port",
+      "description": "Port for the Buckaroo data server (change if 8700 conflicts)",
+      "default": 8700,
+      "min": 1024,
+      "max": 65535
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "python": ">=3.11"
+    }
+  },
+  "keywords": ["data", "table", "csv", "parquet", "viewer", "pandas", "polars"],
+  "license": "BSD-3-Clause"
+}

@@ -1,0 +1,77 @@
+name: Build and Test MCPB
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  repository_dispatch:
+    types: [new-buckaroo-release]
+  workflow_dispatch:
+
+jobs:
+  validate-and-pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install tools
+        run: |
+          npm install -g @anthropic-ai/mcpb
+          pip install "buckaroo[mcp]" mcp pytest pytest-asyncio
+
+      - name: Validate manifest
+        run: mcpb validate manifest.json
+
+      - name: Pack bundle
+        run: mcpb pack . buckaroo-table.mcpb
+
+      - name: Inspect bundle
+        run: mcpb info buckaroo-table.mcpb
+
+      - name: MCP smoke test
+        run: pytest tests/test_mcp_smoke.py -v
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: buckaroo-table-mcpb
+          path: buckaroo-table.mcpb
+
+  cross-platform-smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install and test
+        run: |
+          pip install "buckaroo[mcp]" mcp pytest pytest-asyncio
+          pytest tests/test_mcp_smoke.py -v
+
+  release:
+    needs: [validate-and-pack, cross-platform-smoke]
+    if: github.event_name == 'repository_dispatch' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: buckaroo-table-mcpb
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: buckaroo-table.mcpb
+          tag_name: v${{ github.event.client_payload.version || github.ref_name }}

@@ -386,25 +386,37 @@ jobs:
 
 Before building anything, prove the `uv` type actually works in Claude Desktop today.
 
-- [ ] Install `@anthropic-ai/mcpb` CLI
-- [ ] Clone the [`hello-world-uv` example](https://github.com/modelcontextprotocol/mcpb/tree/main/examples/hello-world-uv) from the mcpb repo
-- [ ] `mcpb pack` it, double-click the `.mcpb` to install in Claude Desktop
-- [ ] Verify the tool works
-- [ ] If it fails: document the error, check [issue #96](https://github.com/anthropics/dxt/issues/96) (Claude Desktop refusing Python install), assess whether `uv` type is actually usable today
-- [ ] **Decision gate**: If `uv` type works → proceed with M2. If not → fall back to `binary` type plan (see appendix).
+- [x] Install `@anthropic-ai/mcpb` CLI — v2.1.2 installed
+- [x] Study the [`hello-world-uv` example](https://github.com/modelcontextprotocol/mcpb/tree/main/examples/hello-world-uv) — confirmed field names (snake_case), pyproject.toml at root, `mcp_config` required by v2.1.2 validator
+- [x] `mcpb validate` passes on Buckaroo manifest
+- [x] `mcpb pack` produces 6.2KB `buckaroo-table.mcpb`
+- [ ] Double-click `.mcpb` to install in Claude Desktop and verify `uv` installs deps and starts server
+- [ ] **Decision gate**: If `uv` type works → M2 complete. If not → fall back to `binary`.
+
+> **Key schema finding**: `server.mcp_config` is required by the v2.1.2 validator even for `uv` type (contradicts spec). Using `uv run ${__dirname}/src/buckaroo_mcp_tool.py`. Tool `annotations` go in the MCP server, not the manifest.
 
 ### M2: Build the Buckaroo MCPB (1-2 days)
 
-- [ ] Create `buckaroo-desktop` repo
-- [ ] Write `manifest.json`, `server/pyproject.toml`, `.mcpbignore`
-- [ ] Copy `buckaroo_mcp_tool.py` into `server/` (or reference from PyPI — TBD based on how `uv` type resolves entry points)
-- [ ] `mcpb pack`, install in Claude Desktop, test end-to-end
-- [ ] Write MCP smoke tests using the Python SDK
-- [ ] Verify on macOS. Test on Windows if you have access, otherwise defer to CI.
+- [x] Created `buckaroo-mcpb` repo (this repo)
+- [x] Written `manifest.json` (uv type, mcp_config, user_config for port, tools list)
+- [x] Written `pyproject.toml` at repo root (declares `buckaroo[mcp]>=0.12.8`)
+- [x] Copied `buckaroo_mcp_tool.py` into `src/` — entry_point is `src/buckaroo_mcp_tool.py`
+- [x] Written `.mcpbignore` (excludes .github/, tests/, *.md, .git/, .venv/, __pycache__)
+- [x] Created placeholder `icon.png` (512×512 blue — replace with real Buckaroo logo)
+- [x] `mcpb pack` → 6.2KB bundle, 4 files (manifest, icon, pyproject.toml, src/tool)
+- [ ] Double-click install in Claude Desktop, test end-to-end with a CSV file
+- [ ] Write MCP smoke tests (M2b below)
+
+### M2b: Write MCP smoke tests
+
+- [x] Written `tests/test_mcp_smoke.py` — initialize + list tools, view_data with CSV
+- [x] Tests pass locally: 2 passed (tool listing: 0.44s, view_data with CSV: 17s including server start)
 
 ### M3: CI + Releases (1 day)
 
-- [ ] Set up GitHub Actions: validate, pack, smoke test, cross-platform matrix
+- [x] Written `.github/workflows/build-mcpb.yml` — validate, pack, smoke test, cross-platform matrix, release job
+- [x] Fixed `mcpb pack` invocation (positional arg, not `--output` flag — v2.1.2 syntax)
+- [ ] Push to GitHub and verify CI passes
 - [ ] Wire up `repository_dispatch` from `buckaroo` release workflow
 - [ ] Create first GitHub Release with `.mcpb` artifact
 - [ ] Update `buckaroo` README with download link and install instructions
