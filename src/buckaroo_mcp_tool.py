@@ -116,49 +116,7 @@ mcp = FastMCP(
 )
 
 _PANEL_URI = "ui://buckaroo/view.html"
-_PANEL_HTML = """\
-<!DOCTYPE html>
-<html style="margin:0;padding:0;height:100%;overflow:hidden">
-<head><meta charset="utf-8">
-<style>
-  body { margin:0; padding:0; height:100%; display:flex; flex-direction:column;
-         background:#0f172a; color:#e2e8f0; font-family:system-ui,sans-serif; }
-  #loading { display:flex; align-items:center; justify-content:center;
-             height:100%; flex-direction:column; gap:16px; }
-  #loading-text { font-size:14px; opacity:0.6; }
-  #frame { display:none; width:100%; flex:1; border:none; }
-</style>
-</head>
-<body>
-  <div id="loading">
-    <div style="font-size:32px">&#129432;</div>
-    <div id="loading-text">Waiting for data file&hellip;</div>
-  </div>
-  <iframe id="frame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
-  <script>
-    window.addEventListener('message', function(e) {
-      var msg = e.data;
-      if (!msg || !msg.method) return;
-      var isResult = (
-        msg.method === 'ui/notifications/tool-result' ||
-        msg.method === 'ui/toolResult'
-      );
-      if (!isResult) return;
-      var content = (msg.params && msg.params.content) ||
-                    (msg.params && msg.params.result && msg.params.result.content) || [];
-      var text = (content[0] && content[0].text) || '';
-      var m = text.match(/http:\\/\\/localhost:\\d+\\/s\\/[a-f0-9]+/);
-      if (m) {
-        document.getElementById('loading').style.display = 'none';
-        var f = document.getElementById('frame');
-        f.src = m[0];
-        f.style.display = 'block';
-      }
-    });
-  </script>
-</body>
-</html>
-"""
+_PANEL_HTML_PATH = os.path.join(os.path.dirname(__file__), "panel.html")
 
 
 @mcp.resource(
@@ -171,7 +129,8 @@ _PANEL_HTML = """\
 )
 def _panel_html() -> str:
     """Buckaroo interactive table viewer panel."""
-    return _PANEL_HTML
+    with open(_PANEL_HTML_PATH) as f:
+        return f.read()
 
 
 @mcp.prompt()

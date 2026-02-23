@@ -22,10 +22,14 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install tools
-        run: |
-          npm install -g @anthropic-ai/mcpb
-          pip install "buckaroo[mcp]" mcp pytest pytest-asyncio
+      - name: Install Python deps
+        run: pip install "buckaroo[mcp]" mcp pytest pytest-asyncio pytest-playwright
+
+      - name: Install Playwright browser
+        run: playwright install chromium --with-deps
+
+      - name: Install mcpb
+        run: npm install -g @anthropic-ai/mcpb
 
       - name: Validate manifest
         run: mcpb validate manifest.json
@@ -36,8 +40,8 @@ jobs:
       - name: Inspect bundle
         run: mcpb info buckaroo-table.mcpb
 
-      - name: MCP smoke test
-        run: pytest tests/test_mcp_smoke.py -v
+      - name: Run all tests
+        run: pytest tests/ -v
 
       - name: Upload bundle
         uses: actions/upload-artifact@v4
@@ -53,13 +57,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install and test
-        run: |
-          pip install "buckaroo[mcp]" mcp pytest pytest-asyncio
-          pytest tests/test_mcp_smoke.py -v
+
+      - name: Install Python deps
+        run: pip install "buckaroo[mcp]" mcp pytest pytest-asyncio pytest-playwright
+
+      - name: Install Playwright browser
+        run: playwright install chromium --with-deps
+
+      - name: Run all tests
+        run: pytest tests/ -v
 
   release:
     needs: [validate-and-pack, cross-platform-smoke]
