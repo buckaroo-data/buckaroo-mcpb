@@ -238,7 +238,7 @@ def ensure_server() -> dict:
                     log.debug("Kill old server error (harmless): %s", exc)
 
     global _server_proc
-    cmd = [sys.executable, "-m", "buckaroo.server"]
+    cmd = [sys.executable, "-m", "buckaroo.server", "--no-browser"]
     log.info("Starting server: %s", " ".join(cmd))
 
     server_log = os.path.join(LOG_DIR, "server.log")

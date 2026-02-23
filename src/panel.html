@@ -14,26 +14,47 @@
   <div id="loading">
     <div style="font-size:32px">&#129432;</div>
     <div id="loading-text">Waiting for data file&hellip;</div>
+    <div id="debug-link" style="margin-top:12px;font-size:12px;opacity:0.7;display:none">
+      <a id="open-link" href="#" target="_blank" style="color:#60a5fa">Open in browser</a>
+    </div>
+    <pre id="debug-log" style="font-size:10px;opacity:0.5;max-height:120px;overflow:auto;margin-top:8px;white-space:pre-wrap;max-width:90%"></pre>
   </div>
   <iframe id="frame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
   <script>
+    var _log = document.getElementById('debug-log');
+    function dbg(msg) {
+      console.log('[buckaroo-panel]', msg);
+      _log.textContent += msg + '\n';
+    }
+    dbg('panel loaded origin=' + location.origin);
+
     window.addEventListener('message', function(e) {
+      dbg('msg: ' + JSON.stringify(e.data).slice(0, 200));
       var msg = e.data;
       if (!msg || !msg.method) return;
       var isResult = (
         msg.method === 'ui/notifications/tool-result' ||
         msg.method === 'ui/toolResult'
       );
-      if (!isResult) return;
+      if (!isResult) {
+        dbg('ignored method: ' + msg.method);
+        return;
+      }
       var content = (msg.params && msg.params.content) ||
                     (msg.params && msg.params.result && msg.params.result.content) || [];
       var text = (content[0] && content[0].text) || '';
+      dbg('text snippet: ' + text.slice(0, 120));
       var m = text.match(/http:\/\/localhost:\d+\/s\/[a-f0-9]+/);
       if (m) {
+        dbg('url found: ' + m[0]);
+        document.getElementById('open-link').href = m[0];
+        document.getElementById('debug-link').style.display = 'block';
         document.getElementById('loading').style.display = 'none';
         var f = document.getElementById('frame');
         f.src = m[0];
         f.style.display = 'block';
+      } else {
+        dbg('no url matched in text');
       }
     });
   </script>
